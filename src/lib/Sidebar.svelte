@@ -1,17 +1,18 @@
 <script>
-	import _ from 'lodash-es'
-	import fileSaver from 'file-saver'
-	import axios from 'axios'
-	import { hoveredBlock, userRole } from './stores/app/misc'
-	import site from './stores/data/site'
-	import sections from './stores/data/sections'
-	import symbols from './stores/data/symbols'
-	import Icon from '@iconify/svelte'
-	import { Symbol } from './const'
-	import Sidebar_Symbol from './Sidebar_Symbol.svelte'
-	import { symbols as symbol_actions, active_page } from './stores/actions'
-	import { v4 as uuidv4 } from 'uuid'
 	import { validate_symbol } from '$lib/converter'
+	import Icon from '@iconify/svelte'
+	import axios from 'axios'
+	import fileSaver from 'file-saver'
+	import _ from 'lodash-es'
+	import { v4 as uuidv4 } from 'uuid'
+	import Sidebar_Symbol from './Sidebar_Symbol.svelte'
+	import { Symbol } from './const'
+	import { active_page, symbols as symbol_actions } from './stores/actions'
+	import { hoveredBlock, userRole } from './stores/app/misc'
+	import sections from './stores/data/sections'
+	import site from './stores/data/site'
+	import symbols from './stores/data/symbols'
+	
 
 	let active_tab = 'site'
 
@@ -80,6 +81,18 @@
 		return data.symbols
 	}
 
+	async function get_more_blocks() {		
+		try {
+			console.log(import.meta.env.MORE_BLOCKS_URL)
+			const response = await fetch("http://172.24.66.252:3333/api/v1/blocks")
+			const records = await response.json()
+			const blocks = records.map(item => item.block)
+			return blocks
+		} catch (error) {
+			return []
+		}
+	}
+
 	async function add_to_page(symbol) {
 		if ($hoveredBlock.id === null || $sections.length === 0) {
 			// no blocks on page, add to top
@@ -110,6 +123,9 @@
 		</button>
 		<button on:click={() => (active_tab = 'primo')} class:active={active_tab === 'primo'}>
 			Primo Blocks
+		</button>
+		<button on:click={() => (active_tab = 'more')} class:active={active_tab === 'more'}>
+			More Blocks
 		</button>
 	</div>
 	{#if active_tab === 'site'}
@@ -156,6 +172,21 @@
 				</label>
 			</div>
 		{/if}
+	{:else if active_tab === 'more'}
+		<div class="symbols">
+			{#await get_more_blocks() then blocks}
+				{#each blocks as symbol, i}
+					<Sidebar_Symbol
+						{symbol}
+						controls_enabled={false}
+						on:download={() => download_symbol(symbol)}
+						on:delete={() => delete_symbol(symbol)}
+						on:duplicate={() => duplicate_symbol(symbol)}
+						on:add_to_page={() => add_primo_block(symbol)}
+					/>
+				{/each}
+			{/await}
+		</div>
 	{:else}
 		<div class="symbols">
 			{#await get_primo_blocks() then blocks}
@@ -190,6 +221,7 @@
 		z-index: 9;
 		position: relative;
 		overflow-y: scroll;
+		overflow-x: hidden;
 	}
 
 	.tabs {
