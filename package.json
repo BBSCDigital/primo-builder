@@ -1,5 +1,5 @@
 {
-	"name": "@primocms/builder",
+	"name": "@bbscdigital/primo-builder",
 	"version": "0.0.17",
 	"scripts": {
 		"dev": "vite dev",
