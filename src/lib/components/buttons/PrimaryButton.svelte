@@ -1,6 +1,6 @@
 <script>
-  import { createEventDispatcher } from 'svelte'
   import Icon from '@iconify/svelte'
+  import { createEventDispatcher } from 'svelte'
   const dispatch = createEventDispatcher()
 
   /** @type {string | null} */
@@ -30,7 +30,7 @@
 <style lang="postcss">
   .primary-button {
     width: 100%;
-    border: 1.5px solid #35d994;
+    border: 1.5px solid #500888;
     color: #cecece;
     padding: 0.5rem;
     font-weight: 00;
@@ -63,7 +63,7 @@
 
     &[disabled] {
       color: #cecece;
-      border: 1px solid #35d994;
+      border: 1px solid #500888;
       opacity: 0.2;
       cursor: not-allowed;
     }

@@ -1,17 +1,17 @@
 <script>
-	import _ from 'lodash-es'
 	import fileSaver from 'file-saver'
-	import axios from 'axios'
-	import { hoveredBlock, userRole } from './stores/app/misc'
-	import site from './stores/data/site'
-	import sections from './stores/data/sections'
-	import symbols from './stores/data/symbols'
-	import Icon from '@iconify/svelte'
-	import { Symbol } from './const'
-	import Sidebar_Symbol from './Sidebar_Symbol.svelte'
-	import { symbols as symbol_actions, active_page } from './stores/actions'
-	import { v4 as uuidv4 } from 'uuid'
+	import _ from 'lodash-es'
+//import axios from 'axios'
 	import { validate_symbol } from '$lib/converter'
+	import Icon from '@iconify/svelte'
+	import { v4 as uuidv4 } from 'uuid'
+	import Sidebar_Symbol from './Sidebar_Symbol.svelte'
+	import { Symbol } from './const'
+	import { active_page, symbols as symbol_actions } from './stores/actions'
+	import { hoveredBlock, userRole } from './stores/app/misc'
+	import sections from './stores/data/sections'
+	import site from './stores/data/site'
+	import symbols from './stores/data/symbols'
 
 	let active_tab = 'site'
 
@@ -73,12 +73,12 @@
 		fileSaver.saveAs(blob, `${copied_symbol.name || copied_symbol.id}.json`)
 	}
 
-	async function get_primo_blocks() {
+	/* async function get_primo_blocks() {
 		const { data } = await axios.get(
 			'https://raw.githubusercontent.com/mateomorris/primo-library/main/primo.json'
 		)
 		return data.symbols
-	}
+	} */
 
 	async function add_to_page(symbol) {
 		if ($hoveredBlock.id === null || $sections.length === 0) {
@@ -108,9 +108,9 @@
 		<button on:click={() => (active_tab = 'site')} class:active={active_tab === 'site'}>
 			Site Blocks
 		</button>
-		<button on:click={() => (active_tab = 'primo')} class:active={active_tab === 'primo'}>
+		<!-- <button on:click={() => (active_tab = 'primo')} class:active={active_tab === 'primo'}>
 			Primo Blocks
-		</button>
+		</button> -->
 	</div>
 	{#if active_tab === 'site'}
 		{#if $symbols.length > 0}
@@ -158,7 +158,7 @@
 		{/if}
 	{:else}
 		<div class="symbols">
-			{#await get_primo_blocks() then blocks}
+			<!-- {#await get_primo_blocks() then blocks}
 				{#each blocks as symbol, i}
 					<Sidebar_Symbol
 						{symbol}
@@ -169,7 +169,7 @@
 						on:add_to_page={() => add_primo_block(symbol)}
 					/>
 				{/each}
-			{/await}
+			{/await} -->
 		</div>
 	{/if}
 </div>

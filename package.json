@@ -1,6 +1,6 @@
 {
-	"name": "@primocms/builder",
-	"version": "0.0.15",
+	"name": "@bbscdigital/primo-builder",
+	"version": "1.0.0",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run package",

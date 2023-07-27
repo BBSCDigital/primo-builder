@@ -1,15 +1,16 @@
 <script>
 	import { _ as C } from 'svelte-i18n'
-	import { find as _find } from 'lodash-es'
-	import ToolbarButton from './ToolbarButton.svelte'
-	import LocaleSelector from './LocaleSelector.svelte'
+	import { PrimoButton } from '../../components/buttons'
+	import { redo_change, undo_change } from '../../stores/actions'
+	import {
+		title as pageTitle
+	} from '../../stores/app/activePage'
+	import modal from '../../stores/app/modal'
 	import { timeline } from '../../stores/data'
 	import sections from '../../stores/data/sections'
-	import { undo_change, redo_change } from '../../stores/actions'
-	import { PrimoButton } from '../../components/buttons'
 	import site from '../../stores/data/site'
-	import { page } from '$app/stores'
-	import modal from '../../stores/app/modal'
+	import LocaleSelector from './LocaleSelector.svelte'
+	import ToolbarButton from './ToolbarButton.svelte'
 
 	const buttons = [
 		{
@@ -64,7 +65,7 @@
 		</div>
 		<div class="site-name">
 			<span class="site">{$site.name} /</span>
-			<span class="page">{$page.name}</span>
+			<span class="page">{$pageTitle}</span>
 		</div>
 		<div class="right">
 			{#if !$timeline.first}

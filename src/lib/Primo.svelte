@@ -1,21 +1,21 @@
 <script>
 	import { browser } from '$app/environment'
 	import '@fontsource/fira-code/index.css'
-	import IconButton from './components/IconButton.svelte'
-	import Toolbar from './views/editor/Toolbar.svelte'
-	import Modal from './views/modal/ModalContainer.svelte'
-	import modal from './stores/app/modal'
-	import * as modals from './views/modal'
-	import HSplitPane from './ui/HSplitPane.svelte'
 	import Sidebar from './Sidebar.svelte'
+	import IconButton from './components/IconButton.svelte'
+	import modal from './stores/app/modal'
+	import HSplitPane from './ui/HSplitPane.svelte'
+	import Toolbar from './views/editor/Toolbar.svelte'
+	import * as modals from './views/modal'
+	import Modal from './views/modal/ModalContainer.svelte'
 
 	import { userRole } from './stores/app'
 
-	import { hydrate_active_data } from './stores/actions'
 	import en from './languages/en.json'
 	import es from './languages/es.json'
+	import { hydrate_active_data } from './stores/actions'
 
-	import { init, addMessages } from 'svelte-i18n'
+	import { addMessages, init } from 'svelte-i18n'
 
 	/** @type {{
    * site: import('$lib').Site
@@ -123,8 +123,8 @@
 		display: flex;
 	}
 	:global(html) {
-		--primo-color-brand: #35d994;
-		--primo-color-brand-dark: #097548;
+		--primo-color-brand: #933edd;
+		--primo-color-brand-dark: #500888;
 		--primo-color-white: white;
 		--primo-color-codeblack: rgb(30, 30, 30);
 		--primo-color-codeblack-opaque: rgba(30, 30, 30, 0.9);
@@ -174,8 +174,8 @@
 		--max-width-container: 1900px;
 
 		--ring: 0px 0px 0px 2px var(--primo-color-brand);
-		--primo-ring-primogreen: 0px 0px 0px 2px var(--primo-color-brand, #35d994);
-		--primo-ring-primogreen-thin: 0px 0px 0px 1px var(--primo-color-brand, #35d994);
-		--primo-ring-primogreen-thick: 0px 0px 0px 3px var(--primo-color-brand, #35d994);
+		--primo-ring-primogreen: 0px 0px 0px 2px var(--primo-color-brand, #933edd);
+		--primo-ring-primogreen-thin: 0px 0px 0px 1px var(--primo-color-brand, #933edd);
+		--primo-ring-primogreen-thick: 0px 0px 0px 3px var(--primo-color-brand, #933edd);
 	}
 </style>

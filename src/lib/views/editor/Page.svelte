@@ -1,27 +1,27 @@
 <script>
-	import _ from 'lodash-es'
-	import { tick } from 'svelte'
-	import { fade } from 'svelte/transition'
 	import { afterNavigate } from '$app/navigation'
-	import { find, isEqual, cloneDeep } from 'lodash-es'
-	import Block from './Layout/Block.svelte'
-	import Spinner from '../../ui/misc/Spinner.svelte'
-	import { code as siteCode } from '../../stores/data/site'
-	import { locale, locked_blocks } from '../../stores/app/misc'
+	import { realtimeChanged } from '$lib/database'
+	import { cloneDeep, find, isEqual } from 'lodash-es'
+	import { tick } from 'svelte'
+	import { addMessages, init } from 'svelte-i18n'
+	import { fade } from 'svelte/transition'
+	import en from '../../languages/en.json'
 	import { updatePreview } from '../../stores/actions'
 	import {
-		id as pageID,
-		url as pageURL,
-		fields as pageFields,
 		code as pageCode,
-		content as pageContent
+		content as pageContent,
+		fields as pageFields,
+		id as pageID,
+		title as pageTitle,
+		url as pageURL
 	} from '../../stores/app/activePage'
+	import { locale, locked_blocks } from '../../stores/app/misc'
 	import sections from '../../stores/data/sections'
-	import { processCode, processCSS, wrapInStyleTags } from '../../utils'
+	import { code as siteCode } from '../../stores/data/site'
 	import { getPageData } from '../../stores/helpers'
-	import en from '../../languages/en.json'
-	import { init, addMessages } from 'svelte-i18n'
-	import { realtimeChanged } from '$lib/database'
+	import Spinner from '../../ui/misc/Spinner.svelte'
+	import { processCSS, processCode, wrapInStyleTags } from '../../utils'
+	import Block from './Layout/Block.svelte'
 
 	export let data
 
@@ -47,6 +47,7 @@
 		$pageFields = page_data.fields
 		$pageCode = page_data.code
 		$pageContent = page_data.content
+		$pageTitle = page_data.name
 
 		if (page_mounted) updatePreview()
 	}
