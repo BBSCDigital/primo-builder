@@ -12,13 +12,7 @@
 	import { hoveredBlock } from '../../../stores/app/misc'
 	import { onMobile, saved, showingIDE } from '../../../stores/app/misc'
 	import modal from '../../../stores/app/modal'
-	import sections from '../../../stores/data/sections'
-	import {
-		update_section_content,
-		symbols,
-		updatePreview,
-		active_page
-	} from '../../../stores/actions'
+	import { updatePreview, active_page } from '../../../stores/actions'
 
 	/** @type {boolean} */
 	export let locked
@@ -30,20 +24,6 @@
 	export let i
 
 	let node
-
-	function hasOptionsAbove(rowIndex, rows) {
-		const rowAbove = rows[rowIndex - 1]
-		if (rowAbove && rowAbove.type === 'options') {
-			return true
-		} else return false
-	}
-
-	function hasOptionsBelow(rowIndex, rows) {
-		const rowBelow = rows[rowIndex + 1]
-		if (rowBelow && rowBelow.type === 'options') {
-			return true
-		} else return false
-	}
 
 	async function delete_block() {
 		$positions = $positions.filter((position) => position.id !== block.id)
@@ -73,15 +53,14 @@
 						label: 'Save',
 						onclick: async (component) => {
 							dispatch('unlock')
-							update_section_content(component, component.content)
-							symbols.update(component.symbol)
 							modal.hide()
 						}
 					}
 				}
 			},
 			{
-				showSwitch: true
+				showSwitch: true,
+				disabledBgClose: true
 			}
 		)
 	}
@@ -176,6 +155,7 @@
 	<div use:hover_block transition:slide={{ duration: 100 }} class="hover-state" />
 {/if}
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
 	bind:this={node}
 	in:fade={{ duration: 100 }}
@@ -192,15 +172,12 @@
 				<LockedOverlay {locked} />
 			{:else}
 				<BlockButtons
-					{block}
 					{i}
 					bind:node={buttons}
 					on:delete={delete_block}
 					on:duplicate={duplicate_block}
 					on:edit-code={() => edit_component(true)}
 					on:edit-content={() => edit_component()}
-					optionsAbove={hasOptionsAbove(i, $sections)}
-					optionsBelow={hasOptionsBelow(i, $sections)}
 					on:moveUp={() => active_page.move_block(block, i - 1)}
 					on:moveDown={() => active_page.move_block(block, i + 1)}
 				/>{/if}

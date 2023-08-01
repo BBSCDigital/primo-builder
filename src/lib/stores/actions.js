@@ -6,7 +6,7 @@ import * as activePage from './app/activePage'
 import { id as activePageID } from './app/activePage'
 import { locale } from './app/misc'
 import stores, { update_timeline } from './data'
-import { update as update_site, content, site } from './data/site'
+import { update as update_site, content as site_content, site } from './data/site'
 import { timeline } from './data'
 import { buildStaticPage } from './helpers'
 import {dataChanged, storageChanged} from '$lib/database'
@@ -19,7 +19,7 @@ import {Page} from '../const'
  * @param {import('$lib').Site_Data} data - Combined data object from the server
  */
 export async function hydrate_active_data(data) {
-  stores.sections.set(data.sections)
+  // stores.sections.set(data.sections)
   stores.pages.set(data.pages)
   stores.symbols.set(data.symbols)
   update_site(data.site)
@@ -42,6 +42,14 @@ export const symbols = {
   create: async (symbol, index = 0) => {
     await update_timeline({
       doing: async () => {
+
+        // apply site languages to symbol
+        for (let language in get(site_content)) {
+          if (!symbol.hasOwnProperty(language)) {
+              // Set the corresponding language in the 'symbol.content' object
+              symbol.content[language] = symbol.content['en']
+          }
+        }
         stores.symbols.update(store => [
           ...store.slice(0, index),
           symbol,
@@ -65,18 +73,15 @@ export const symbols = {
   },
   update: async (updated_symbol) => {
 
-    const original_symbol = _.cloneDeep(find(get(stores.symbols), { id: updated_symbol.id }))
     const original_symbols = _.cloneDeep(get(stores.symbols))
+    const original_symbol = _.cloneDeep(original_symbols.find(symbol => symbol.id === updated_symbol.id))
     const original_sections = _.cloneDeep(get(stores.sections))
 
     if (_.isEqual(original_symbol, updated_symbol)) return
     await update_timeline({
       doing: async () => {
 
-        stores.symbols.update(store => store.map(symbol => symbol.id === updated_symbol.id ? updated_symbol : symbol))
-
-        // Update static content & symbol in sections
-        stores.sections.update(store => store.map(section => (section.symbol.id === updated_symbol.id) ? { ...section, symbol: updated_symbol } : section))
+        stores.symbols.update(store => store.map(symbol => symbol.id === updated_symbol.id ? { ...symbol, ...updated_symbol } : symbol))
 
         dataChanged({
           table: 'symbols',
@@ -106,7 +111,7 @@ export const symbols = {
 
     await update_timeline({
       doing: async () => {
-        stores.sections.update(store => store.filter(section => section.symbol.id !== symbol_to_delete.id))
+        stores.sections.update(store => store.filter(section => section.symbol !== symbol_to_delete.id))
         
         deleted_sections = await dataChanged({
           table: 'sections',
@@ -160,7 +165,7 @@ export const active_page = {
       index: position,
       page: get(activePageID),
       content: symbol.content,
-      symbol
+      symbol: symbol.id
     }
 
     const new_sections = [
@@ -172,12 +177,12 @@ export const active_page = {
     await update_timeline({
       doing: async () => {
         stores.sections.set(new_sections)
-        await dataChanged({ table: 'sections', action: 'upsert', data: new_sections.map(s => ({ ...s, symbol: s.symbol.id })) })
+        await dataChanged({ table: 'sections', action: 'upsert', data: new_sections.map(s => ({ ...s, symbol: s.symbol })) })
       },
       undoing: async () => {
         stores.sections.set(original_sections)
         await dataChanged({ table: 'sections', action: 'delete', id: new_section.id })
-        await dataChanged({ table: 'sections', action: 'upsert', data: original_sections.map(s => ({ ...s, symbol: s.symbol.id })) })
+        await dataChanged({ table: 'sections', action: 'upsert', data: original_sections.map(s => ({ ...s, symbol: s.symbol })) })
       }
     })
     update_page_preview()
@@ -191,12 +196,20 @@ export const active_page = {
       site: get(site).id
     }
 
+    // apply site languages to symbol
+    for (let language in get(site_content)) {
+      if (!new_symbol.hasOwnProperty(language)) {
+          // Set the corresponding language in the 'symbol.content' object
+          new_symbol.content[language] = new_symbol.content['en']
+      }
+    }
+
     const new_section = {
       id: uuidv4(),
       index: position,
       page: get(activePageID),
       content: symbol.content,
-      symbol: new_symbol
+      symbol: new_symbol.id
     }
 
     const new_sections = [
@@ -215,14 +228,14 @@ export const active_page = {
         stores.sections.set(new_sections)
 
         await dataChanged({ table: 'symbols', action: 'insert', data: new_symbol })
-        await dataChanged({ table: 'sections', action: 'upsert', data: new_sections.map(s => ({ ...s, symbol: s.symbol.id })) })
+        await dataChanged({ table: 'sections', action: 'upsert', data: new_sections.map(s => ({ ...s, symbol: s.symbol })) })
       },
       undoing: async () => {
         stores.symbols.update(store => store.filter(s => s.id !== new_symbol.id))
         stores.sections.set(original_sections)
 
         await dataChanged({ table: 'sections', action: 'delete', id: new_section.id })
-        await dataChanged({ table: 'sections', action: 'upsert', data: original_sections.map(s => ({ ...s, symbol: s.symbol.id })) })
+        await dataChanged({ table: 'sections', action: 'upsert', data: original_sections.map(s => ({ ...s, symbol: s.symbol })) })
         await dataChanged({ table: 'symbols', action: 'delete', id: new_symbol.id })
       }
     })
@@ -282,7 +295,7 @@ export const active_page = {
     await update_timeline({
       doing: async () => {
         stores.sections.set(new_sections)
-        await dataChanged({ table: 'sections', action: 'upsert', data: new_sections.map(s => ({ ...s, symbol: s.symbol.id })) })
+        await dataChanged({ table: 'sections', action: 'upsert', data: new_sections.map(s => ({ ...s, symbol: s.symbol })) })
       },
       undoing: async () => {
         stores.sections.set(original_sections)
@@ -299,12 +312,12 @@ export const active_page = {
       doing: async () => {
         stores.sections.set(new_sections)
         await dataChanged({ table: 'sections', action: 'delete', id: block.id })
-        await dataChanged({ table: 'sections', action: 'upsert', data: new_sections.map(s => ({ ...s, symbol: s.symbol.id })) })
+        await dataChanged({ table: 'sections', action: 'upsert', data: new_sections.map(s => ({ ...s, symbol: s.symbol })) })
       },
       undoing: async () => {
         stores.sections.set(original_sections)
-        await dataChanged({ table: 'sections', action: 'insert', data: { ...block, symbol: block.symbol.id } })
-        await dataChanged({ table: 'sections', action: 'upsert', data: original_sections.map(s => ({ ...s, symbol: s.symbol.id })) })
+        await dataChanged({ table: 'sections', action: 'insert', data: { ...block, symbol: block.symbol } })
+        await dataChanged({ table: 'sections', action: 'upsert', data: original_sections.map(s => ({ ...s, symbol: s.symbol })) })
       }
     })
     update_page_preview()
@@ -478,79 +491,325 @@ export async function update_symbol_with_static_values(component) {
   })
 }
 
+// extract symbol/instance content from updated section content
 export async function update_section_content(section, updated_content) {
-  const original_sections = _.cloneDeep(get(stores.sections))
-  const original_content = _.cloneDeep(section.content)
+  const symbol = get(stores.symbols).find(symbol => symbol.id === section.symbol)
 
-  // Update static content in symbol
-  const original_symbol = _.cloneDeep(section.symbol)
-  const updated_symbol = _.cloneDeep(section.symbol)
-
-  let should_update_symbol = false
-  Object.entries(updated_content).forEach(
-    ([locale_key, locale_value]) => {
-      Object.entries(locale_value).forEach(([field_key, field_value]) => {
-        const matching_field = find(section.symbol.fields, [
-          'key',
-          field_key,
-        ])
-        if (matching_field.is_static) {
-          should_update_symbol = true
-          updated_symbol.content[locale_key] = {
-            ...updated_symbol.content[locale_key],
-            [field_key]: field_value,
-          }
-        }
-      })
-    }
-  )
+  const original_symbol_content = _.cloneDeep(symbol.content)
+  const original_section_content = _.cloneDeep(section.content)
 
   await update_timeline({
     doing: async () => {
-      stores.sections.update(store => store.map(s => s.id === section.id ? { ...s, content: updated_content, symbol: updated_symbol } : s))
-      await dataChanged({ table: 'sections', action: 'update', id: section.id, data: { content: updated_content } })
-      if (should_update_symbol) {
-        stores.symbols.update(store => store.map(s => s.id === section.symbol.id ? updated_symbol : s))
-        await dataChanged({ table: 'symbols', action: 'update', id: section.symbol.id, data: { content: updated_symbol.content } })
-      }
+
+			const updated_symbol_content = cloneDeep(symbol.content)
+			const updated_instance_content = {}
+
+			Object.entries(updated_content).forEach(([language_key, language_content]) => {
+				Object.entries(language_content).forEach(([field_key, field_value]) => {
+					const matching_field = symbol.fields.find((field) => field.key === field_key)
+					if (matching_field.is_static) {
+						updated_symbol_content[language_key] = {
+							...updated_symbol_content[language_key],
+							[field_key]: field_value
+						}
+					} else {
+						updated_instance_content[language_key] = {
+							...updated_instance_content[language_key],
+							[field_key]: field_value
+						}
+					}
+				})
+			})
+
+      stores.symbols.update(store => store.map(s => s.id === symbol.id ? { ...s, content: updated_symbol_content } : s))
+      stores.sections.update(store => store.map(s => s.id === section.id ? { ...s, content: updated_instance_content } : s))
+      await Promise.all([
+        dataChanged({ table: 'sections', action: 'update', id: section.id, data: { content: updated_instance_content } }),
+        dataChanged({ table: 'symbols', action: 'update', id: symbol.id, data: { content: updated_symbol_content } })
+      ])
     },
     undoing: async () => {
-      stores.sections.set(original_sections)
-      await dataChanged({ table: 'sections', action: 'update', id: section.id, data: { content: original_content } })
-      if (should_update_symbol) {
-        stores.symbols.update(store => store.map(s => s.id === section.symbol.id ? { ...s, content: original_symbol.content } : s))
-        await dataChanged({ table: 'symbols', action: 'update', id: section.symbol.id, data: { content: original_symbol.content } })
-      }
+      stores.symbols.update(store => store.map(s => s.id === symbol.id ? { ...s, content: original_symbol_content } : s))
+      stores.sections.update(store => store.map(s => s.id === section.id ? { ...s, content: original_section_content } : s))
+      await dataChanged({ table: 'sections', action: 'update', id: section.id, data: { content: original_section_content } })
     }
   })
   update_page_preview()
 }
 
-export async function addLocale(key) {
-  content.update(s => ({
-    ...s,
-    [key]: s['en']
-  }))
-  // update_timeline()
+export async function add_language(key) {
+  await update_timeline({
+    doing: async () => {
+
+      site_content.update(s => ({
+        ...s,
+        [key]: s['en']
+      }))
+
+      stores.pages.update((store) => store.map(page => ({
+        ...page,
+        content: {
+          ...page.content,
+          [key]: page.content['en']
+        }
+      })))
+
+      stores.symbols.update((store) => store.map(symbol => ({
+        ...symbol,
+        content: {
+          ...symbol.content,
+          [key]: symbol.content['en']
+        }
+      })))
+
+      stores.sections.update((store) => store.map(section => ({
+        ...section,
+        content: {
+          ...section.content,
+          [key]: section.content['en']
+        }
+      })))
+
+      // add language to page, site, and sections content
+      await Promise.all([
+        await dataChanged({
+          table: 'sites',
+          action: 'update',
+          id: get(site)['id'],
+          data: {
+            content: {
+              ...get(site).content,
+              [key]: get(site).content['en']
+            }
+          }
+        }),
+        ...get(stores.symbols).map(async symbol => {
+          await dataChanged({
+            table: 'symbols',
+            action: 'update',
+            id: symbol.id,
+            data: {
+              content: {
+                ...symbol.content,
+                [key]: symbol.content['en']
+              }
+            }
+          })
+        }),
+        ...get(stores.pages).map(async page => {
+          await dataChanged({
+            table: 'sections',
+            action: 'select',
+            match: { page: page.id },
+            order: ['index', { ascending: true }],
+          }).then(async all_sections => {
+            all_sections.map(async section => {
+              await dataChanged({
+                table: 'sections',
+                action: 'update',
+                id: section.id,
+                data: {
+                  content: {
+                    ...section.content,
+                    [key]: section.content['en']
+                  }
+                }
+              })
+            })
+          }),
+          await dataChanged({
+            table: 'pages',
+            action: 'update',
+            id: page.id,
+            data: {
+              content: {
+                ...page.content,
+                [key]: page.content['en']
+              }
+            }
+          })
+        }),
+      ])
+    },
+    undoing: async () => {
+
+      locale.set('en')
+
+      site_content.update(s => {
+        delete s[key]
+        return s
+      })
+
+      stores.pages.update((store) => store.map(page => {
+        delete page.content[key]
+        return page
+      }))
+
+      stores.sections.update((store) => store.map(section => {
+        delete section.content[key]
+        return section
+      }))
+
+      stores.symbols.update((store) => store.map(symbol => {
+        delete symbol.content[key]
+        return symbol
+      }))
+
+      await Promise.all([
+        await dataChanged({
+          table: 'sites',
+          action: 'update',
+          id: get(site)['id'],
+          data: {
+            content: get(site_content)
+          }
+        }),
+        ...get(stores.sections).map(async section => {
+          await dataChanged({
+            table: 'sections',
+            action: 'update',
+            id: section.id,
+            data: {
+              content: section.content
+            }
+          })
+        }),
+        ...get(stores.pages).map(async page => {
+
+          await dataChanged({
+            table: 'sections',
+            action: 'select',
+            match: { page: page.id },
+            order: ['index', { ascending: true }],
+          }).then(async all_sections => {
+            all_sections.map(async section => {
+              delete section.content[key]
+              await dataChanged({
+                table: 'sections',
+                action: 'update',
+                id: section.id,
+                data: {
+                  content: section.content
+                }
+              })
+            })
+          })
+
+          await dataChanged({
+            table: 'pages',
+            action: 'update',
+            id: page.id,
+            data: {
+              content: page.content
+            }
+          })
+        }),
+      ])
+
+    }
+  })
 }
 
-export async function removeLocale(key) {
+
+export async function delete_language(key) {
   locale.set('en')
-  content.update(s => {
-    const updatedContent = cloneDeep(s)
-    delete updatedContent[key]
-    return updatedContent
+
+  const original = {
+    site_content: _.cloneDeep(get(site_content)),
+    pages: _.cloneDeep(get(stores.pages)),
+    sections: _.cloneDeep(get(stores.sections)),
+    symbols: _.cloneDeep(get(stores.symbols))
+  }
+
+  update_timeline({
+    doing: async () => {
+      site_content.update(s => {
+        delete s[key]
+        return s
+      })
+    
+      stores.pages.update((store) => store.map(page => {
+        delete page.content[key]
+        return page
+      }))
+    
+      stores.sections.update((store) => store.map(section => {
+        delete section.content[key]
+        return section
+      }))
+    
+      stores.symbols.update((store) => store.map(symbol => {
+        delete symbol.content[key]
+        return symbol
+      }))
+
+      await Promise.all([
+        await dataChanged({
+          table: 'sites',
+          action: 'update',
+          id: get(site)['id'],
+          data: {
+            content: get(site_content)
+          }
+        }),
+        ...get(stores.sections).map(async section => {
+          await dataChanged({
+            table: 'sections',
+            action: 'update',
+            id: section.id,
+            data: {
+              content: section.content
+            }
+          })
+        }),
+        ...get(stores.pages).map(async page => {
+          await dataChanged({
+            table: 'pages',
+            action: 'update',
+            id: page.id,
+            data: {
+              content: page.content
+            }
+          })
+        }),
+      ])
+
+    },
+    undoing: async () => {
+      site_content.set(original.site_content)
+      stores.pages.set(original.pages)
+      stores.sections.set(original.sections)
+      stores.symbols.set(original.symbols)
+
+      await Promise.all([
+        await dataChanged({
+          table: 'sites',
+          action: 'update',
+          id: get(site)['id'],
+          data: {
+            content: get(site_content)
+          }
+        }),
+        await dataChanged({
+          table: 'sections',
+          action: 'upsert',
+          data: get(stores.sections).map(section => ({ id: section.id, content: section.content }))
+        }),
+        await dataChanged({
+          table: 'pages',
+          action: 'upsert',
+          data: get(stores.pages).map(page => ({ 
+            id: page.id, 
+            content: page.content
+          }))
+        })
+      ])
+    }
   })
-  // update_timeline()
 }
 
-export async function changeLocale() {
-  const locales = Object.keys(get(content))
-  const loc = get(locale)
-  locales.reduce((a, b, i) => {
-    if (a === loc) locale.set(b) // switch to next locale
-    else if (i === locales.length - 1) locale.set(locales[0]) // switch to first locale
-  })
+export async function set_language(loc) {
+  locale.set(loc)
 }
 
 export async function updatePreview(updatedSite = get(site)) {

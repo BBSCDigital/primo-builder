@@ -3,17 +3,15 @@
 	import { realtimeChanged } from '$lib/database'
 	import { cloneDeep, find, isEqual } from 'lodash-es'
 	import { tick } from 'svelte'
-	import { addMessages, init } from 'svelte-i18n'
 	import { fade } from 'svelte/transition'
-	import en from '../../languages/en.json'
 	import { updatePreview } from '../../stores/actions'
 	import {
 		code as pageCode,
 		content as pageContent,
 		fields as pageFields,
 		id as pageID,
-		title as pageTitle,
-		url as pageURL
+		name as pageName,
+		url as pageURL,
 	} from '../../stores/app/activePage'
 	import { locale, locked_blocks } from '../../stores/app/misc'
 	import sections from '../../stores/data/sections'
@@ -23,31 +21,25 @@
 	import { processCSS, processCode, wrapInStyleTags } from '../../utils'
 	import Block from './Layout/Block.svelte'
 
-	export let data
+	export let page
 
 	let html_head = ''
 	let html_below = ''
 
-	addMessages('en', en)
-	init({
-		fallbackLocale: 'en',
-		initialLocale: 'en'
-	})
-
 	let element
 
-	$: set_page_content(data.page)
+	$: set_page_content(page)
 	async function set_page_content(page_data) {
 		if (!page_data) return
 		await tick()
-		$sections = data.sections
+		$sections = page_data.sections
 
 		$pageID = page_data.id
+		$pageName = page_data.name
 		$pageURL = page_data.url
 		$pageFields = page_data.fields
 		$pageCode = page_data.code
 		$pageContent = page_data.content
-		$pageTitle = page_data.name
 
 		if (page_mounted) updatePreview()
 	}
@@ -111,8 +103,7 @@
 
 	async function lock_block(block_id) {
 		realtimeChanged({
-			active_block: block_id,
-			user: data.user
+			active_block: block_id
 		})
 	}
 

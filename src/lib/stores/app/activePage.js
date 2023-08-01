@@ -2,8 +2,8 @@ import { derived, writable } from 'svelte/store'
 import { Page } from '../../const'
 
 export const id = writable('')
+export const name = writable('')
 export const url = writable('index')
-// export const sections = writable([])
 export const code = writable(Page().code)
 export const content = writable({ en: {} })
 export const fields = writable(Page().fields)
@@ -12,6 +12,9 @@ export const title = writable('')
 export function set(val) {
   if (val.id) {
     id.set(val.id)
+  }
+  if (val.name) {
+    name.set(val.name)
   }
   if (val.url) {
     url.set(val.url)
@@ -30,10 +33,11 @@ export function set(val) {
 
 // conveniently get the entire site
 export default derived(
-  [ id, url, code, content, fields, title ], 
-  ([id, url, code, content, fields, title]) => {
+  [ id, name, url, code, content, fields ], 
+  ([id, name, url, code, content, fields]) => {
   return {
     id,
+    name,
     url,
     code, 
     content,

@@ -14,11 +14,12 @@
 	import Link from '@tiptap/extension-link'
 	import BubbleMenu from '@tiptap/extension-bubble-menu'
 	import FloatingMenu from '@tiptap/extension-floating-menu'
-	import { tick, createEventDispatcher, getContext } from 'svelte'
+	import { tick, createEventDispatcher } from 'svelte'
 	import { browser } from '$app/environment'
 	import { processCode } from '$lib/utils'
 	import { hovering_outside } from '$lib/utilities'
 	import pages from '$lib/stores/data/pages'
+	import symbols from '$lib/stores/data/symbols'
 	import { locale } from '$lib/stores/app/misc'
 	import { update_section_content } from '$lib/stores/actions'
 	import CopyButton from './CopyButton.svelte'
@@ -30,6 +31,8 @@
 
 	export let i
 	export let block
+
+	$: symbol = $symbols.find((symbol) => symbol.id === block.symbol)
 
 	let node
 	$: if (node) {
@@ -72,7 +75,7 @@
 			{
 				i,
 				id: block.id,
-				symbol: block.symbol.id,
+				symbol: symbol.id,
 				top: y,
 				bottom: y + height,
 				left
@@ -80,9 +83,11 @@
 		]
 	}
 
-	$: symbol = block.symbol
-	let component_data = get_content_with_static(block, block.symbol)[$locale]
-	$: component_data = get_content_with_static(block, symbol)[$locale]
+	$: component_data = get_content_with_static({
+		component: block,
+		symbol,
+		loc: $locale
+	})
 
 	let html = ''
 	let css = ''
@@ -370,6 +375,10 @@
 					e.preventDefault()
 					e.target.blur()
 					link_editor_is_visible = false
+					save_edited_value(key, {
+						url: updated_url,
+						label: element.innerText
+					})
 				}
 			}
 			// element.onblur = (e) => {
@@ -431,14 +440,18 @@
 		}
 	}
 
-	let local_component_data = _.cloneDeep(component_data)
+	let local_component_data
+	$: if (component_data) {
+		local_component_data = _.cloneDeep(component_data)
+	}
 	$: hydrateComponent(component_data)
 	async function hydrateComponent(data) {
 		if (!component) return
 		else if (error) {
 			error = null
 			compileComponentCode(symbol.code)
-		} else if (!_.isEqual(data, local_component_data)) {
+			// } else if (!_.isEqual(data, local_component_data)) {
+		} else {
 			// TODO: re-render the component if `data` doesn't match its fields (e.g. when removing a component field to add to the page)
 			component.$set(data)
 			// sometimes data hydration doesn't work on some fields,

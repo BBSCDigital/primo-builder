@@ -11,32 +11,19 @@
 
 	import { userRole } from './stores/app'
 
-	import en from './languages/en.json'
-	import es from './languages/es.json'
 	import { hydrate_active_data } from './stores/actions'
 
-	import { addMessages, init } from 'svelte-i18n'
-
+	
 	/** @type {{
    * site: import('$lib').Site
    * pages: Array<import('$lib').Page>
-   * sections: Array<import('$lib').Section>
    * symbols: Array<import('$lib').Symbol>
   }} */
 	export let data
 
 	export let role = 'DEV'
-	export let language = 'en'
 
 	$: $userRole = role
-
-	addMessages('en', en)
-	addMessages('es', es)
-
-	init({
-		fallbackLocale: 'en',
-		initialLocale: language
-	})
 
 	hydrate_active_data(data)
 
@@ -46,6 +33,7 @@
 			? {
 					SITE_PAGES: modals.SitePages,
 					COMPONENT_EDITOR: modals.ComponentEditor,
+					SYMBOL_EDITOR: modals.SymbolEditor,
 					PAGE_EDITOR: modals.PageEditor,
 					SITE_EDITOR: modals.SiteEditor
 			  }[modalType] || $modal.component

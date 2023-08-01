@@ -4,8 +4,7 @@ import axios from 'axios'
 export async function load(event) {
   const [ parent_url = 'index', child_url ] = event.params['page']?.split('/') ?? []
   const page_url = child_url ?? parent_url
-
-  const {data} = await axios.get(`https://raw.githubusercontent.com/mateomorris/theme-minimal/main/primo.json`)
+  const {data} = await axios.get(`https://raw.githubusercontent.com/mateomorris/${event.params.site}/main/primo.json`)
   const {site, pages, sections, symbols} = data
   const page = pages.find(page => page.url === (page_url ?? 'index'))
 

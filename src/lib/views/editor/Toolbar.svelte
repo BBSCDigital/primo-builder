@@ -1,43 +1,59 @@
 <script>
-	import { _ as C } from 'svelte-i18n'
 	import { PrimoButton } from '../../components/buttons'
 	import { redo_change, undo_change } from '../../stores/actions'
-	import {
-		title as pageTitle
-	} from '../../stores/app/activePage'
+	import { userRole } from '../../stores/app'
+	import { fields as page_fields, name as page_name } from '../../stores/app/activePage'
 	import modal from '../../stores/app/modal'
 	import { timeline } from '../../stores/data'
 	import sections from '../../stores/data/sections'
-	import site from '../../stores/data/site'
+	import site, { fields as site_fields } from '../../stores/data/site'
 	import LocaleSelector from './LocaleSelector.svelte'
 	import ToolbarButton from './ToolbarButton.svelte'
 
-	const buttons = [
+	const page_field_button = {
+		id: 'toolbar--page',
+		title: 'Page',
+		label: 'Page',
+		svg: '<svg width="10" height="16" viewBox="0 0 12 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0.425" y="0.925" width="10.4834" height="14.15" rx="1.575" fill="#121212"/><rect x="2.41675" y="3.625" width="2" height="2" fill="#D9D9D9"/><rect x="2.41675" y="7.125" width="6" height="0.75" fill="#D9D9D9"/><rect x="2.41675" y="9.375" width="5" height="0.75" fill="#D9D9D9"/><rect x="2.41675" y="11.625" width="6.5" height="0.75" fill="#D9D9D9"/><rect x="0.425" y="0.925" width="10.4834" height="14.15" rx="1.575" stroke="#CECECE" stroke-width="0.85"/></svg>',
+		onclick: () => modal.show('PAGE_EDITOR', {}, { showSwitch: true })
+	}
+
+	const site_field_button = {
+		id: 'toolbar--site',
+		svg: `<svg width="12" height="18" viewBox="0 0 15 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.50831" y="0.925" width="10.4834" height="13.3167" rx="1.575" fill="#121212"/><rect x="3.50831" y="0.925" width="10.4834" height="13.3167" rx="1.575" stroke="#CECECE" stroke-width="0.85"/><rect x="2.09169" y="2.34199" width="10.4834" height="13.3167" rx="1.575" fill="#121212"/><rect x="2.09169" y="2.34199" width="10.4834" height="13.3167" rx="1.575" stroke="#CECECE" stroke-width="0.85"/><rect x="0.675" y="3.75801" width="10.4834" height="13.3167" rx="1.575" fill="#121212"/><rect x="2.66669" y="6.4165" width="2" height="2" fill="#D9D9D9"/><rect x="2.66669" y="9.6665" width="5.75" height="0.75" fill="#D9D9D9"/><rect x="2.66669" y="11.6665" width="5" height="0.75" fill="#D9D9D9"/><rect x="2.66669" y="13.6665" width="6.5" height="0.75" fill="#D9D9D9"/><rect x="0.675" y="3.75801" width="10.4834" height="13.3167" rx="1.575" stroke="#CECECE" stroke-width="0.85"/></svg>`,
+		title: 'Site',
+		label: 'Site',
+		onclick: () => modal.show('SITE_EDITOR', {}, { showSwitch: true })
+	}
+
+	$: show_page_fields = $userRole === 'DEV' || $page_fields.length > 0
+	$: show_site_fields = $userRole === 'DEV' || $site_fields.length > 0
+
+	let field_buttons = []
+
+	// for content editors, only show page/site field buttons if fields exist
+	$: if (show_page_fields && show_site_fields) {
+		field_buttons = [page_field_button, site_field_button]
+	} else if (show_page_fields) {
+		field_buttons = [page_field_button]
+	} else if (show_site_fields) {
+		field_buttons = [site_field_button]
+	}
+
+	$: buttons = [
 		{
 			id: 'toolbar--pages',
-			title: $C('Pages'),
+			title: 'Pages',
 			svg: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M10 19q-.425 0-.713-.288T9 18q0-.425.288-.713T10 17h10q.425 0 .713.288T21 18q0 .425-.288.713T20 19H10Zm0-6q-.425 0-.713-.288T9 12q0-.425.288-.713T10 11h10q.425 0 .713.288T21 12q0 .425-.288.713T20 13H10Zm0-6q-.425 0-.713-.288T9 6q0-.425.288-.713T10 5h10q.425 0 .713.288T21 6q0 .425-.288.713T20 7H10ZM5 20q-.825 0-1.413-.588T3 18q0-.825.588-1.413T5 16q.825 0 1.413.588T7 18q0 .825-.588 1.413T5 20Zm0-6q-.825 0-1.413-.588T3 12q0-.825.588-1.413T5 10q.825 0 1.413.588T7 12q0 .825-.588 1.413T5 14Zm0-6q-.825 0-1.413-.588T3 6q0-.825.588-1.413T5 4q.825 0 1.413.588T7 6q0 .825-.588 1.413T5 8Z"/></svg>',
-			onclick: () => modal.show('SITE_PAGES', {}, { hideLocaleSelector: true, maxWidth: '600px' }),
-			showSwitch: false
+			onclick: () =>
+				modal.show(
+					'SITE_PAGES',
+					{},
+					{ hideLocaleSelector: true, maxWidth: '600px', showSwitch: false }
+				)
 		},
-		[
-			{
-				id: 'toolbar--page',
-				title: 'Page',
-				label: 'Page',
-				svg: '<svg width="10" height="16" viewBox="0 0 12 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0.425" y="0.925" width="10.4834" height="14.15" rx="1.575" fill="#121212"/><rect x="2.41675" y="3.625" width="2" height="2" fill="#D9D9D9"/><rect x="2.41675" y="7.125" width="6" height="0.75" fill="#D9D9D9"/><rect x="2.41675" y="9.375" width="5" height="0.75" fill="#D9D9D9"/><rect x="2.41675" y="11.625" width="6.5" height="0.75" fill="#D9D9D9"/><rect x="0.425" y="0.925" width="10.4834" height="14.15" rx="1.575" stroke="#CECECE" stroke-width="0.85"/></svg>',
-				onclick: () => modal.show('PAGE_EDITOR', {}, { showSwitch: true })
-			},
-			{
-				id: 'toolbar--site',
-				svg: `<svg width="12" height="18" viewBox="0 0 15 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.50831" y="0.925" width="10.4834" height="13.3167" rx="1.575" fill="#121212"/><rect x="3.50831" y="0.925" width="10.4834" height="13.3167" rx="1.575" stroke="#CECECE" stroke-width="0.85"/><rect x="2.09169" y="2.34199" width="10.4834" height="13.3167" rx="1.575" fill="#121212"/><rect x="2.09169" y="2.34199" width="10.4834" height="13.3167" rx="1.575" stroke="#CECECE" stroke-width="0.85"/><rect x="0.675" y="3.75801" width="10.4834" height="13.3167" rx="1.575" fill="#121212"/><rect x="2.66669" y="6.4165" width="2" height="2" fill="#D9D9D9"/><rect x="2.66669" y="9.6665" width="5.75" height="0.75" fill="#D9D9D9"/><rect x="2.66669" y="11.6665" width="5" height="0.75" fill="#D9D9D9"/><rect x="2.66669" y="13.6665" width="6.5" height="0.75" fill="#D9D9D9"/><rect x="0.675" y="3.75801" width="10.4834" height="13.3167" rx="1.575" stroke="#CECECE" stroke-width="0.85"/></svg>`,
-				title: 'Site',
-				label: 'Site',
-				onclick: () => modal.show('SITE_EDITOR', {}, { showSwitch: true })
-			}
-		]
+		field_buttons
 	]
-
 	$: pageEmpty =
 		$sections && $sections.length <= 1 && $sections.length > 0 && $sections[0]['type'] === 'options'
 </script>
@@ -65,7 +81,7 @@
 		</div>
 		<div class="site-name">
 			<span class="site">{$site.name} /</span>
-			<span class="page">{$pageTitle}</span>
+			<span class="page">{$page_name}</span>
 		</div>
 		<div class="right">
 			{#if !$timeline.first}
